@@ -1,0 +1,18 @@
+#!/usr/bin/node
+
+var spawn = require('child_process').spawn;
+var parse = require('./parse.js');
+
+var opt = ['sink', 'notify'].reduce(function(opt, key, i) {
+  opt[key] = process.argv[i+2];
+  return opt;
+}, {});
+
+opt.notify = opt.notify === undefined ? true : opt.notify;
+
+parse(function(info) {
+  var current = info[opt.sink].mute;
+  spawn('pactl', [
+    'set-sink-mute', opt.sink, current ? '0' : '1']);
+  opt.notify && spawn('notify-send', ['-u', 'low', 'Volume', current ? 'Unmuted' : 'Muted']);
+});

@@ -1,0 +1,20 @@
+#!/usr/bin/node
+
+var spawn = require('child_process').spawn;
+var parse = require('./parse.js');
+
+var opt = ['sink', 'adjust', 'max', 'notify'].reduce(function(opt, key, i) {
+  opt[key] = process.argv[i+2];
+  return opt;
+}, {});
+
+opt.max = opt.max || 150;
+opt.notify = opt.notify === undefined ? true : opt.notify;
+
+parse(function(info) {
+  var current = info[opt.sink].volume[0];
+  var next = Math.min(opt.max, current + parseInt(opt.adjust));
+  spawn('pactl', [
+    'set-sink-volume', opt.sink, next + '%']);
+  opt.notify && spawn('notify-send', ['-u', 'low', 'Volume', 'Current: ' + next + '%']);
+});
